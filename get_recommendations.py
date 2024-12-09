@@ -3,7 +3,11 @@ import requests
 from dotenv import load_dotenv
 import os
 
+# Load environment variables from .env
 load_dotenv()
+
+
+
 API_KEY = os.getenv("LASTFM_API_KEY")
 
 if not API_KEY:
