@@ -6,6 +6,8 @@ import os
 load_dotenv()
 API_KEY = os.getenv("LASTFM_API_KEY")
 
+if not API_KEY:
+    raise ValueError("API-Schlüssel nicht gefunden. Bitte Umgebungsvariable setzen.")
 
 def generate_artist_queries(artist_name):
     """Generates variations of the artist name by splitting on symbols like &, ,, ;."""
