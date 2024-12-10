@@ -24,7 +24,7 @@ def generate_artist_queries(artist_name):
             queries.append(before_symbol)
     return list(set(queries))  # Remove duplicates
 
-def get_similar_tracks(song_name, artist_name=None, limit=20):
+def get_similar_tracks(song_name, artist_name=None, limit=50):
     """Fetch similar tracks for a given song and artist."""
     url = "http://ws.audioscrobbler.com/2.0/"
     recommendations = []
@@ -144,7 +144,7 @@ def retry_with_first_result(recs, limit=20):
     else:
         return recs, "No results found for the first recommendation. Queue updated."
 
-def get_recommendations(song, artist, limit=20):
+def get_recommendations(song, artist, limit=50):
     """Main function to get song recommendations."""
     recs = get_similar_tracks(song, artist, limit)
     

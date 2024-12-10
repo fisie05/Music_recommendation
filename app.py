@@ -1,57 +1,49 @@
 import streamlit as st
 from get_recommendations import get_recommendations, retry_with_first_result
 
-# Initialize session state
-if "recommendations" not in st.session_state:
-    st.session_state.recommendations = []
-if "retry_queue" not in st.session_state:
-    st.session_state.retry_queue = []
+# Load custom CSS
+with open("styles.css", "r") as css_file:
+    st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
 
-st.title("Music Recommendation🎵")
-st.write("Get recommendations for similar tracks based on your favorite songs!")
+# App Header
+st.markdown("<div class='header'><h1>🎵 Music Recommendations</h1></div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-header'>Discover songs similar to your favorites.</div>", unsafe_allow_html=True)
 
-# Input fields
-song = st.text_input("Enter the song name:")
-artist = st.text_input("Enter the artist name:")
-limit = st.slider("Number of Recommendations", 1, 20, 10)
+# Input Fields
+st.markdown("<div class='input-section'>", unsafe_allow_html=True)
+song = st.text_input("🎶 Enter the Song Name:")
+artist = st.text_input("🎤 Enter the Artist Name:")
+limit = st.slider("📊 Number of Recommendations", 1, 50, 10)
+st.markdown("</div>", unsafe_allow_html=True)
 
-# Recommendation button
-if st.button("Get Recommendations"):
+# Recommendation Button
+if st.button("💡 Get Recommendations"):
     if not song or not artist:
-        st.warning("Please provide both song and artist names.")
+        st.warning("⚠️ Please provide both the song and artist names.")
     else:
-        with st.spinner("Fetching recommendations..."):
+        with st.spinner("🔍 Fetching recommendations..."):
             recommendations = get_recommendations(song, artist, limit)
             if recommendations:
-                st.success("Here are your recommendations:")
-                st.session_state.recommendations = recommendations
-                st.session_state.retry_queue = recommendations[:]  # Copy recommendations for retry queue
+                st.success("✅ Recommendations Found!")
+                st.markdown("<div class='results-section'>", unsafe_allow_html=True)
                 for idx, rec in enumerate(recommendations, 1):
-                    st.write(f"{idx}. **{rec['title']}** by *{rec['artist']}*")
+                    st.markdown(f"<div class='result-item'>{idx}. <b>{rec['title']}</b> by <i>{rec['artist']}</i></div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
             else:
-                st.error("No recommendations found. Try a different song or artist.")
+                st.error("❌ No recommendations found. Try a different song or artist.")
 
-# Retry feature
+# Retry Section
 if st.session_state.retry_queue:
-    st.subheader("Would you like to try again with the next result?")
+    st.markdown("<div class='retry-section'>", unsafe_allow_html=True)
     first_result = st.session_state.retry_queue[0]
 
-    # Retry button
-    if st.button(f"Retry with: {first_result['title']} by {first_result['artist']}"):
-        with st.spinner(f"Fetching new recommendations based on: {first_result['title']}..."):
+    if st.button(f"♻️ Retry with: {first_result['title']} by {first_result['artist']}"):
+        with st.spinner("🔄 Fetching new recommendations..."):
             updated_recs, error = retry_with_first_result(st.session_state.retry_queue, limit)
             if updated_recs:
-                st.session_state.recommendations = updated_recs
-                st.session_state.retry_queue = updated_recs[:]  # Update retry queue
-                st.success("New recommendations:")
+                st.success("✅ New Recommendations Found!")
                 for idx, rec in enumerate(updated_recs, 1):
-                    st.write(f"{idx}. **{rec['title']}** by *{rec['artist']}*")
-            else:
-                st.session_state.retry_queue = updated_recs  # Update the retry queue
-                if error:
-                    st.warning(error)
-
-    # Stop retry button
-    if st.button("Stop retries"):
-        st.session_state.retry_queue.clear()
-        st.info("Retries stopped.")
+                    st.markdown(f"<div class='result-item'>{idx}. <b>{rec['title']}</b> by <i>{rec['artist']}</i></div>", unsafe_allow_html=True)
+            elif error:
+                st.warning(error)
+    st.markdown("</div>", unsafe_allow_html=True)
