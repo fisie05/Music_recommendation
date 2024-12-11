@@ -1,5 +1,5 @@
 import streamlit as st
-from get_recommendations import get_recommendations, retry_with_first_result
+from get_recommendations import get_recommendations, retry_with_first_result, add_user, save_recommendation, load_recommendations
 
 # Load custom CSS
 with open("styles.css", "r") as css_file:
@@ -8,6 +8,15 @@ with open("styles.css", "r") as css_file:
 # App Header
 st.markdown("<div class='header'><h1>🎵 Music Recommendation Hub</h1></div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-header'>Discover songs similar to your favorites.</div>", unsafe_allow_html=True)
+
+# Login and Signup Section
+st.markdown("<div class='login-section'>", unsafe_allow_html=True)
+username = st.text_input("👤 Enter your username:")
+if st.button("🔑 Login / Signup"):
+    user_id = add_user(username)
+    st.session_state.user_id = user_id
+    st.success(f"Welcome, {username}!")
+st.markdown("</div>", unsafe_allow_html=True)
 
 # Initialize Session State
 if "recommendations" not in st.session_state:
@@ -39,6 +48,15 @@ if st.button("💡 Get Recommendations"):
                 st.markdown("</div>", unsafe_allow_html=True)
             else:
                 st.error("❌ No recommendations found. Try a different song or artist.")
+    
+        # Save Recommendations Button
+    if "user_id" in st.session_state:
+        if st.button("💾 Save Recommendations"):
+            save_recommendation(st.session_state.user_id, st.session_state.recommendations)
+            st.success("Recommendations saved successfully!")
+    else:
+        st.warning("Please login to save recommendations.")
+
 
 # Retry Feature
 if st.session_state.retry_queue:
@@ -66,3 +84,18 @@ if st.session_state.retry_queue:
             st.session_state.retry_queue.clear()
             st.info("Retries stopped.")
     st.markdown("</div>", unsafe_allow_html=True)
+
+# Load Saved Recommendations Button
+if "user_id" in st.session_state:
+    if st.button("📂 Load Saved Recommendations"):
+        saved_recs = load_recommendations(st.session_state.user_id)
+        if saved_recs:
+            st.markdown("<div class='results-section'>", unsafe_allow_html=True)
+            st.markdown("<h3>Your Saved Recommendations:</h3>", unsafe_allow_html=True)
+            for idx, rec in enumerate(saved_recs, 1):
+                st.markdown(f"<div class='result-item'>{idx}. <b>{rec['title']}</b> by <i>{rec['artist']}</i></div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.info("You have no saved recommendations.")
+else:
+    st.warning("Please login to view saved recommendations.")

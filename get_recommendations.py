@@ -2,6 +2,7 @@ import requests
 
 from dotenv import load_dotenv
 import os
+import sqlite3
 
 # Load environment variables from .env
 load_dotenv()
@@ -173,3 +174,40 @@ def get_recommendations(song, artist, limit=50):
 
     recs = filter_duplicates(recs)[:limit]  # Ensure no duplicates and apply the limit
     return recs
+
+
+
+
+def add_user(username):
+    """Add a new user or retrieve existing user ID."""
+    conn = sqlite3.connect("recommendations.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR IGNORE INTO users (username) VALUES (?)", (username,))
+    conn.commit()
+    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+    user_id = cursor.fetchone()[0]
+    conn.close()
+    return user_id
+
+def save_recommendation(user_id, recommendations):
+    """Save recommendations for a user."""
+    conn = sqlite3.connect("recommendations.db")
+    cursor = conn.cursor()
+    for rec in recommendations:
+        cursor.execute("""
+            INSERT INTO recommendations (user_id, title, artist)
+            VALUES (?, ?, ?)
+        """, (user_id, rec['title'], rec['artist']))
+    conn.commit()
+    conn.close()
+
+def load_recommendations(user_id):
+    """Load recommendations for a user."""
+    conn = sqlite3.connect("recommendations.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT title, artist FROM recommendations WHERE user_id = ?
+    """, (user_id,))
+    results = cursor.fetchall()
+    conn.close()
+    return [{'title': row[0], 'artist': row[1]} for row in results]
