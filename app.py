@@ -13,10 +13,19 @@ st.markdown("<div class='sub-header'>Discover songs similar to your favorites.</
 st.markdown("<div class='login-section'>", unsafe_allow_html=True)
 username = st.text_input("👤 Enter your username:")
 if st.button("🔑 Login / Signup"):
-    user_id = add_user(username)
-    st.session_state.user_id = user_id
-    st.success(f"Welcome, {username}!")
+    try:
+        if username:
+            user_id = add_user(username)
+            st.session_state.user_id = user_id
+            st.success(f"Welcome, {username}!")
+        else:
+            st.warning("⚠️ Username cannot be empty. Please enter a valid username.")
+    except ValueError as e:
+        st.error(str(e))
+    except Exception as e:
+        st.error("An unexpected error occurred. Please try again.")
 st.markdown("</div>", unsafe_allow_html=True)
+
 
 # Initialize Session State
 if "recommendations" not in st.session_state:
@@ -54,8 +63,10 @@ if st.button("💡 Get Recommendations"):
         if st.button("💾 Save Recommendations"):
             save_recommendation(st.session_state.user_id, st.session_state.recommendations)
             st.success("Recommendations saved successfully!")
+            # Do not clear st.session_state.recommendations here
     else:
         st.warning("Please login to save recommendations.")
+
 
 
 # Retry Feature
@@ -90,6 +101,7 @@ if "user_id" in st.session_state:
     if st.button("📂 Load Saved Recommendations"):
         saved_recs = load_recommendations(st.session_state.user_id)
         if saved_recs:
+            st.session_state.recommendations = saved_recs  # Update session state
             st.markdown("<div class='results-section'>", unsafe_allow_html=True)
             st.markdown("<h3>Your Saved Recommendations:</h3>", unsafe_allow_html=True)
             for idx, rec in enumerate(saved_recs, 1):

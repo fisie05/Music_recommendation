@@ -176,18 +176,29 @@ def get_recommendations(song, artist, limit=50):
     return recs
 
 
-
-
 def add_user(username):
     """Add a new user or retrieve existing user ID."""
+    if not username.strip():
+        raise ValueError("Username cannot be empty.")  # Rule: No empty names
+    
     conn = sqlite3.connect("recommendations.db")
     cursor = conn.cursor()
-    cursor.execute("INSERT OR IGNORE INTO users (username) VALUES (?)", (username,))
+    
+    # Ensure the username is unique
+    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+    existing_user = cursor.fetchone()
+    if existing_user:
+        return existing_user[0]  # Return the existing user's ID
+    
+    # Add the new user
+    cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
     conn.commit()
+    
     cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
     user_id = cursor.fetchone()[0]
     conn.close()
     return user_id
+
 
 def save_recommendation(user_id, recommendations):
     """Save recommendations for a user."""
