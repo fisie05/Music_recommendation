@@ -60,12 +60,20 @@ if st.button("💡 Get Recommendations"):
     
         # Save Recommendations Button
     if "user_id" in st.session_state:
+        print("!")
         if st.button("💾 Save Recommendations"):
-            save_recommendation(st.session_state.user_id, st.session_state.recommendations)
-            st.success("Recommendations saved successfully!")
-            # Do not clear st.session_state.recommendations here
+            print("!!")
+            if st.session_state.recommendations:
+                try:
+                    save_recommendation(st.session_state.user_id, st.session_state.recommendations)
+                    st.success("Recommendations saved successfully!")
+                except Exception as e:
+                    st.error(f"Error saving recommendations: {e}")
+            else:
+                st.warning("No recommendations to save.")
     else:
         st.warning("Please login to save recommendations.")
+
 
 
 

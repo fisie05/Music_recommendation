@@ -202,6 +202,13 @@ def add_user(username):
 
 def save_recommendation(user_id, recommendations):
     """Save recommendations for a user."""
+    if not recommendations:
+        print("No recommendations to save.")  # Debugging
+        return
+    
+    print(f"Saving recommendations for user_id: {user_id}")
+    print(f"Recommendations: {recommendations}")
+    
     conn = sqlite3.connect("recommendations.db")
     cursor = conn.cursor()
     for rec in recommendations:
@@ -211,9 +218,13 @@ def save_recommendation(user_id, recommendations):
         """, (user_id, rec['title'], rec['artist']))
     conn.commit()
     conn.close()
+    print("Recommendations saved successfully!")
+
+
 
 def load_recommendations(user_id):
     """Load recommendations for a user."""
+    print(f"Loading recommendations for user_id: {user_id}")  # Debugging
     conn = sqlite3.connect("recommendations.db")
     cursor = conn.cursor()
     cursor.execute("""
@@ -221,4 +232,5 @@ def load_recommendations(user_id):
     """, (user_id,))
     results = cursor.fetchall()
     conn.close()
+    print(f"Loaded recommendations: {results}")  # Debugging
     return [{'title': row[0], 'artist': row[1]} for row in results]
