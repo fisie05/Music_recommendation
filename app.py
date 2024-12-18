@@ -1,13 +1,18 @@
 import streamlit as st
-from get_recommendations import get_recommendations, retry_with_first_result, add_user, save_recommendation, load_recommendations
+from get_recommendations import get_recommendations, add_user, save_recommendation, load_recommendations
+from recommendation_logic import retry_with_first_result
+import time
+
 
 # Load custom CSS
 with open("styles.css", "r") as css_file:
     st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
 
+
 # App Header
 st.markdown("<div class='header'><h1>🎵 Music Recommendation Hub</h1></div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-header'>Discover songs similar to your favorites.</div>", unsafe_allow_html=True)
+
 
 # Login and Signup Section
 st.markdown("<div class='login-section'>", unsafe_allow_html=True)
@@ -33,18 +38,36 @@ if "recommendations" not in st.session_state:
 if "retry_queue" not in st.session_state:
     st.session_state.retry_queue = []
 
+
 # Input Fields
 st.markdown("<div class='input-section'>", unsafe_allow_html=True)
 song = st.text_input("🎶 Enter the Song Name:")
 artist = st.text_input("🎤 Enter the Artist Name:")
-limit = st.slider("📊 Number of Recommendations", 1, 50, 10)
+limit = st.slider("📊 Number of Recommendations", 1, 5, 5)
 st.markdown("</div>", unsafe_allow_html=True)
 
+
+
+
 # Recommendation Button
-if st.button("💡 Get Recommendations"):
+
+# Check session state to temporarily disable button
+if "disable_button" not in st.session_state:
+    st.session_state.disable_button = False
+
+# Disable button logic
+if st.session_state.disable_button:
+    st.warning("⏳ Please wait a second before clicking again.")
+    time.sleep(1)  # Wait for 1 second
+    st.session_state.disable_button = False  # Re-enable the button
+
+# Button logic
+if st.button("💡 Get Recommendations", disabled=st.session_state.disable_button):
     if not song or not artist:
         st.warning("⚠️ Please provide both the song and artist names.")
     else:
+        # Disable the button temporarily
+        st.session_state.disable_button = True
         with st.spinner("🔍 Fetching recommendations..."):
             recommendations = get_recommendations(song, artist, limit)
             if recommendations:
@@ -57,12 +80,10 @@ if st.button("💡 Get Recommendations"):
                 st.markdown("</div>", unsafe_allow_html=True)
             else:
                 st.error("❌ No recommendations found. Try a different song or artist.")
-    
+
         # Save Recommendations Button
     if "user_id" in st.session_state:
-        print("!")
-        if st.button("💾 Save Recommendations"):
-            print("!!")
+        if st.button("🗃️ Save Recommendations"):
             if st.session_state.recommendations:
                 try:
                     save_recommendation(st.session_state.user_id, st.session_state.recommendations)
@@ -73,9 +94,6 @@ if st.button("💡 Get Recommendations"):
                 st.warning("No recommendations to save.")
     else:
         st.warning("Please login to save recommendations.")
-
-
-
 
 # Retry Feature
 if st.session_state.retry_queue:
@@ -106,7 +124,7 @@ if st.session_state.retry_queue:
 
 # Load Saved Recommendations Button
 if "user_id" in st.session_state:
-    if st.button("📂 Load Saved Recommendations"):
+    if st.button("🗂 Load Saved Recommendations"):
         saved_recs = load_recommendations(st.session_state.user_id)
         if saved_recs:
             st.session_state.recommendations = saved_recs  # Update session state
